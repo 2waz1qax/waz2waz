@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>와즈 개발 스튜디오 통신채팅 테스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff6b35, #f7931e, #ffcd3c);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2c2f33;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: #36393f;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen {
+            display: none;
+            padding: 30px;
+            text-align: center;
+            color: white;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ffcd3c;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: #b9bbbe;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #40444b;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            background: #484c52;
+            box-shadow: 0 0 0 2px #ffcd3c;
+        }
+
+        .input-field::placeholder {
+            color: #72767d;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            background: #ffcd3c;
+            color: #2c2f33;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: #f7931e;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #7289da;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5b6eae;
+        }
+
+        .btn-danger {
+            background: #f04747;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d73527;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #72767d;
+            border-top: 2px solid #ffcd3c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status.success {
+            background: #43b581;
+            color: white;
+        }
+
+        .status.error {
+            background: #f04747;
+            color: white;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .settings-btn {
+            background: #72767d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .settings-btn:hover {
+            background: #5b6066;
+        }
+
+        .genre-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+
+        .genre-item {
+            background: #40444b;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #ffcd3c;
+        }
+
+        .genre-item:hover {
+            background: #484c52;
+            transform: translateX(5px);
+        }
+
+        .genre-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .song-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+
+        .song-item {
+            background: #40444b;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            position: relative;
+            border-left: 4px solid #7289da;
+        }
+
+        .song-number {
+            display: inline-block;
+            background: #ffcd3c;
+            color: #2c2f33;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 12px;
+        }
+
+        .song-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .control-btn {
+            background: #72767d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: #5b6066;
+        }
+
+        .add-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: #ffcd3c;
+            color: #2c2f33;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background: #f7931e;
+            transform: scale(1.1);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #36393f;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            color: white;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #72767d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #5b6066;
+        }
+
+        .checkmark {
+            font-size: 48px;
+            color: #43b581;
+            margin: 20px 0;
+        }
+
+        /* 스크롤바 스타일링 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2c2f33;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #72767d;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5b6066;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 보안코드 입력 화면 -->
+        <div id="loginScreen" class="screen active">
+            <h1 class="title">와즈코드 입력하세요</h1>
+            <div class="input-group">
+                <input type="password" id="securityCode" class="input-field" placeholder="발급받은 와즈코드를 쓰세요">
+            </div>
+            <button onclick="verifySecurityCode()" class="btn">확인</button>
+        </div>
+
+        <!-- 인트로/로딩 화면 -->
+        <div id="introScreen" class="screen">
+            <h1 class="title">와즈 개발 스튜디오 통신채팅</h1>
+            <div id="loadingContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span id="loadingText">와즈 코드 확인중...</span>
+                </div>
+                <div id="statusContainer"></div>
+            </div>
+        </div>
+
+        <!-- 메인 화면 -->
+        <div id="mainScreen" class="screen">
+            <div class="header">
+                <button onclick="showSettings()" class="settings-btn">⚙️</button>
+                <h1 class="title">와즈 개발 스튜디오 통신채팅</h1>
+                <div></div>
+            </div>
+            <button onclick="showGenres()" class="btn">서버목록</button>
+        </div>
+
+        <!-- 장르 선택 화면 -->
+        <div id="genreScreen" class="screen">
+            <button onclick="showMain()" class="back-btn">←</button>
+            <h1 class="title">서버</h1>
+            <div class="genre-list">
+                <div class="genre-item" onclick="selectGenre('jpop')">
+                    <div class="genre-title">0</div>
+                    <div>기본섭</div>
+                </div>
+                <div class="genre-item" onclick="selectGenre('anime')">
+                    <div class="genre-title">1</div>
+                    <div>와섭</div>
+                </div>
+                <div class="genre-item" onclick="selectGenre('children')">
+                    <div class="genre-title">2</div>
+                    <div>망섭</div>
+                </div>
+                <div class="genre-item" onclick="selectGenre('variety')">
+                    <div class="genre-title">3</div>
+                    <div>망고라면만들기</div>
+                </div>
+                <div class="genre-item" onclick="selectGenre('vocaloid')">
+                    <div class="genre-title">4</div>
+                    <div>보물선만들기 기록</div>
+                </div>
+                <div class="genre-item" onclick="selectGenre('classical')">
+                    <div class="genre-title">5</div>
+                    <div>모두를 위한 무료</div>
+                </div>
+                <div class="genre-item" onclick="selectGenre('game')">
+                    <div class="genre-title">6</div>
+                    <div>기타채널1</div>
+                </div>
+                <div class="genre-item" onclick="selectGenre('namco')">
+                    <div class="genre-title">7</div>
+                    <div>기타채널2</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 노래 목록 화면 -->
+        <div id="songScreen" class="screen">
+            <button onclick="showGenres()" class="back-btn">←</button>
+            <h1 id="genreTitle" class="title">장르</h1>
+            <div id="songList" class="song-list"></div>
+            <button onclick="showAddSong()" class="add-btn">✏️</button>
+        </div>
+
+        <!-- 설정 모달 -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <h2 class="title">설정</h2>
+                <div class="input-group">
+                    <label style="color: #b9bbbe; margin-bottom: 10px; display: block;">현재 와즈코드:</label>
+                    <input type="password" id="currentSecurityCode" class="input-field" readonly>
+                </div>
+                <div class="input-group">
+                    <label style="color: #b9bbbe; margin-bottom: 10px; display: block;">새 와즈코드:</label>
+                    <input type="password" id="newSecurityCode" class="input-field" placeholder="새 보안코드 입력">
+                </div>
+                <button onclick="updateSecurityCode()" class="btn">수정</button>
+                <button onclick="closeSettings()" class="btn btn-secondary">취소</button>
+            </div>
+        </div>
+
+        <!-- 노래 추가/수정 모달 -->
+        <div id="songModal" class="modal">
+            <div class="modal-content">
+                <h2 id="songModalTitle" class="title">내용추가</h2>
+                <div class="input-group">
+                    <textarea id="songInput" class="input-field" placeholder="내용을 입력하세요" rows="3"></textarea>
+                </div>
+                <button onclick="saveSong()" class="btn">추가</button>
+                <button onclick="closeSongModal()" class="btn btn-secondary">취소</button>
+            </div>
+        </div>
+
+        <!-- 확인 모달 -->
+        <div id="confirmModal" class="modal">
+            <div class="modal-content">
+                <h3 id="confirmTitle" class="title">확인</h3>
+                <p id="confirmMessage" style="color: #b9bbbe; margin: 20px 0;"></p>
+                <button onclick="confirmAction()" class="btn">예</button>
+                <button onclick="closeConfirm()" class="btn btn-secondary">아니오</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let currentToken = '';
+        let currentGenre = '';
+        let currentSongIndex = -1;
+        let syncInterval = null;
+        let isSyncing = false;
+        let confirmCallback = null;
+
+        const GITHUB_API_BASE = 'https://api.github.com';
+        const USERNAME = 'gusick9316';
+        const REPO = 'waz2waz';
+
+        const genreNames = {
+            '0': '기본섭',
+            '1': '와섭',
+            '2': '망섭',
+            '3': '망고라면 만들기',
+            '4': '보물선만들기 기록',
+            '5': '모두를 위한 무료',
+            '6': '기타채널1',
+            '7': '기타채널2'
+        };
+
+        // 화면 전환 함수들
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showMain() {
+            showScreen('mainScreen');
+        }
+
+        function showGenres() {
+            showScreen('genreScreen');
+        }
+
+        function showSettings() {
+            document.getElementById('currentSecurityCode').value = currentToken;
+            document.getElementById('newSecurityCode').value = '';
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function showAddSong() {
+            document.getElementById('songModalTitle').textContent = '내용추가';
+            document.getElementById('songInput').value = '';
+            currentSongIndex = -1;
+            document.getElementById('songModal').classList.add('active');
+        }
+
+        function showEditSong(index) {
+            document.getElementById('songModalTitle').textContent = '내용 수정';
+            const songs = getSongsFromStorage(currentGenre);
+            document.getElementById('songInput').value = songs[index];
+            currentSongIndex = index;
+            document.getElementById('songModal').classList.add('active');
+        }
+
+        function closeSongModal() {
+            document.getElementById('songModal').classList.remove('active');
+        }
+
+        function showConfirm(title, message, callback) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            confirmCallback = callback;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirmModal').classList.remove('active');
+            confirmCallback = null;
+        }
+
+        function confirmAction() {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            closeConfirm();
+        }
+
+        // 보안코드 검증
+        async function verifySecurityCode() {
+            const code = document.getElementById('securityCode').value.trim();
+            if (!code) {
+                alert('와즈코드를 입력해주세요.');
+                return;
+            }
+
+            currentToken = code;
+            showScreen('introScreen');
+            
+            // 로딩 시퀀스 시작
+            await performLoadingSequence();
+        }
+
+        async function performLoadingSequence() {
+            const loadingText = document.getElementById('loadingText');
+            const statusContainer = document.getElementById('statusContainer');
+            
+            try {
+                // 1. 보안 코드 확인
+                loadingText.textContent = '와즈 코드 확인중...';
+                await sleep(800); // 시간 단축
+                addStatus('와즈 코드 확인 완료', 'success');
+
+                // 2. 로컬 확인
+                loadingText.textContent = '로컬확인중...';
+                await sleep(800); // 시간 단축
+                addStatus('로컬 확인 완료', 'success');
+
+                // 3. 클라우드 확인 및 데이터 병렬 로드
+                loadingText.textContent = '클라우드 확인 및 데이터 로드중...';
+                const [isValid] = await Promise.all([
+                    validateGitHubAccess(),
+                    loadAllGenreData()
+                ]);
+                
+                if (!isValid) {
+                    throw new Error('클라우드 연결 실패');
+                }
+                addStatus('클라우드 확인 및 데이터 로드 완료', 'success');
+
+                // 완료 표시
+                document.querySelector('.loading').innerHTML = '<div class="checkmark">✓</div><span>확인완료</span>';
+                await sleep(1200); // 시간 단축
+
+                // 토큰 저장
+                localStorage.setItem('taiko_security_code', currentToken);
+                
+                // 메인 화면으로 이동
+                showMain();
+                
+                // 실시간 동기화 시작
+                startRealTimeSync();
+
+            } catch (error) {
+                addStatus('문제가 발생했습니다', 'error');
+                await sleep(1500); // 시간 단축
+                showScreen('loginScreen');
+                document.getElementById('securityCode').value = '';
+            }
+        }
+
+        function addStatus(message, type) {
+            const statusContainer = document.getElementById('statusContainer');
+            const status = document.createElement('div');
+            status.className = `status ${type}`;
+            status.textContent = message;
+            statusContainer.appendChild(status);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // GitHub API 함수들 - 최적화된 버전
+        async function validateGitHubAccess() {
+            try {
+                const response = await fetch(`${GITHUB_API_BASE}/repos/${USERNAME}/${REPO}`, {
+                    headers: {
+                        'Authorization': `token ${currentToken}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    cache: 'no-store'
+                });
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function saveToGitHub(filename, content) {
+            try {
+                // 병렬 처리를 위해 Promise.all 사용
+                const [getResponse] = await Promise.all([
+                    fetch(`${GITHUB_API_BASE}/repos/${USERNAME}/${REPO}/contents/${filename}`, {
+                        headers: {
+                            'Authorization': `token ${currentToken}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        },
+                        cache: 'no-store'
+                    }).catch(() => ({ok: false}))
+                ]);
+
+                let sha = null;
+                if (getResponse.ok) {
+                    const data = await getResponse.json();
+                    sha = data.sha;
+                }
+
+                const response = await fetch(`${GITHUB_API_BASE}/repos/${USERNAME}/${REPO}/contents/${filename}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${currentToken}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update ${filename}`,
+                        content: btoa(unescape(encodeURIComponent(content))),
+                        sha: sha
+                    }),
+                    cache: 'no-store'
+                });
+
+                return response.ok;
+            } catch (error) {
+                console.error('GitHub 저장 실패:', error);
+                return false;
+            }
+        }
+
+        async function loadFromGitHub(filename) {
+            try {
+                const response = await fetch(`${GITHUB_API_BASE}/repos/${USERNAME}/${REPO}/contents/${filename}`, {
+                    headers: {
+                        'Authorization': `token ${currentToken}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    cache: 'no-store'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return decodeURIComponent(escape(atob(data.content)));
+                }
+                return null;
+            } catch (error) {
+                console.error('GitHub 로드 실패:', error);
+                return null;
+            }
+        }
+
+        // 데이터 관리 함수들 - 최적화된 버전
+        async function loadAllGenreData() {
+            // 병렬 로딩 구현
+            const loadPromises = Object.keys(genreNames).map(async genre => {
+                const data = await loadFromGitHub(`${genre}.json`);
+                if (data) {
+                    localStorage.setItem(`waz2waz_${genre}`, data);
+                } else {
+                    localStorage.setItem(`waz2waz_${genre}`, JSON.stringify([]));
+                }
+            });
+            
+            await Promise.all(loadPromises);
+        }
+
+        function getSongsFromStorage(genre) {
+            const data = localStorage.getItem(`waz2waz_${genre}`);
+            return data ? JSON.parse(data) : [];
+        }
+
+        async function saveSongsToStorage(genre, songs) {
+            const jsonData = JSON.stringify(songs);
+            localStorage.setItem(`waz2waz_${genre}`, jsonData);
+            await saveToGitHub(`${genre}.json`, jsonData);
+        }
+
+        // 장르 선택
+        function selectGenre(genre) {
+            currentGenre = genre;
+            document.getElementById('genreTitle').textContent = genreNames[genre];
+            renderSongs();
+            showScreen('songScreen');
+        }
+
+        // 노래 목록 렌더링
+        function renderSongs() {
+            const songs = getSongsFromStorage(currentGenre);
+            const songList = document.getElementById('songList');
+            songList.innerHTML = '';
+
+            songs.forEach((song, index) => {
+                const songItem = document.createElement('div');
+                songItem.className = 'song-item';
+                songItem.innerHTML = `
+                    <div>
+                        <span class="song-number">${index + 1}</span>
+                        ${song}
+                    </div>
+                    <div class="song-controls">
+                        <button class="control-btn" onclick="showEditSong(${index})" title="수정">✏️</button>
+                        <button class="control-btn" onclick="deleteSong(${index})" title="삭제">🗑️</button>
+                        <button class="control-btn" onclick="moveSong(${index}, -1)" title="위로" ${index === 0 ? 'disabled' : ''}>⬆</button>
+                        <button class="control-btn" onclick="moveSong(${index}, 1)" title="아래로" ${index === songs.length - 1 ? 'disabled' : ''}>⬇</button>
+                    </div>
+                `;
+                songList.appendChild(songItem);
+            });
+        }
+
+        // 노래 저장
+        function saveSong() {
+            const input = document.getElementById('songInput').value.trim();
+            if (!input) {
+                alert('내용을 입력해주세요.');
+                return;
+            }
+
+            if (currentSongIndex === -1) {
+                // 새 노래 추가
+                showConfirm('추가', '추가를 하시겠습니까?', () => {
+                    addNewSong(input);
+                });
+            } else {
+                // 기존 노래 수정
+                showConfirm('수정', '수정을 하시겠습니까?', () => {
+                    editSong(currentSongIndex, input);
+                });
+            }
+        }
+
+        async function addNewSong(songTitle) {
+            const songs = getSongsFromStorage(currentGenre);
+            songs.push(songTitle);
+            await saveSongsToStorage(currentGenre, songs);
+            renderSongs();
+            closeSongModal();
+        }
+
+        async function editSong(index, newTitle) {
+            const songs = getSongsFromStorage(currentGenre);
+            songs[index] = newTitle;
+            await saveSongsToStorage(currentGenre, songs);
+            renderSongs();
+            closeSongModal();
+        }
+
+        // 노래 삭제
+        function deleteSong(index) {
+            showConfirm('삭제', '삭제하시겠습니까?', async () => {
+                const songs = getSongsFromStorage(currentGenre);
+                songs.splice(index, 1);
+                await saveSongsToStorage(currentGenre, songs);
+                renderSongs();
+            });
+        }
+
+        // 노래 순서 변경
+        async function moveSong(index, direction) {
+            const songs = getSongsFromStorage(currentGenre);
+            const newIndex = index + direction;
+            
+            if (newIndex < 0 || newIndex >= songs.length) return;
+            
+            [songs[index], songs[newIndex]] = [songs[newIndex], songs[index]];
+            await saveSongsToStorage(currentGenre, songs);
+            renderSongs();
+        }
+
+        // 보안코드 업데이트
+        async function updateSecurityCode() {
+            const newCode = document.getElementById('newSecurityCode').value.trim();
+            if (!newCode) {
+                alert('새 와즈코드를 입력해주세요.');
+                return;
+            }
+
+            // 새 토큰으로 접근 테스트
+            const oldToken = currentToken;
+            currentToken = newCode;
+            
+            const isValid = await validateGitHubAccess();
+            if (isValid) {
+                localStorage.setItem('taiko_security_code', currentToken);
+                closeSettings();
+                alert('와즈코드가 성공적으로 변경되었습니다.');
+            } else {
+                currentToken = oldToken;
+                alert('연결 실패: 와즈코드를 확인해주세요.');
+                showScreen('loginScreen');
+                document.getElementById('securityCode').value = '';
+            }
+        }
+
+        // 실시간 동기화 - 최적화된 버전
+        function startRealTimeSync() {
+            if (syncInterval) clearInterval(syncInterval);
+            
+            // 1초마다 동기화 (기존 0.5초에서 조정)
+            syncInterval = setInterval(async () => {
+                if (isSyncing) return;
+                
+                isSyncing = true;
+                try {
+                    // 현재 활성화된 장르만 동기화
+                    if (currentGenre && document.getElementById('songScreen').classList.contains('active')) {
+                        const remoteData = await loadFromGitHub(`${currentGenre}.json`);
+                        if (remoteData) {
+                            const localData = localStorage.getItem(`waz2waz_${currentGenre}`);
+                            if (localData !== remoteData) {
+                                localStorage.setItem(`waz2waz_${currentGenre}`, remoteData);
+                                renderSongs();
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('동기화 오류:', error);
+                } finally {
+                    isSyncing = false;
+                }
+            }, 1000);
+        }
+
+        // 초기화
+        window.addEventListener('load', () => {
+            // 저장된 보안코드가 있으면 자동 로그인 시도
+            const savedToken = localStorage.getItem('taiko_security_code');
+            if (savedToken) {
+                document.getElementById('securityCode').value = savedToken;
+                verifySecurityCode();
+            }
+        });
+
+        // 페이지 종료시 동기화 정리
+        window.addEventListener('beforeunload', () => {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+            }
+        });
+    </script>
+</body>
+  </html>
